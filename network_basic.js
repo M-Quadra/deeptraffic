@@ -1,10 +1,10 @@
 //<![CDATA[
 
 // a few things don't have var in front of them - they update already existing variables the game needs
-lanesSide = 1;
-patchesAhead = 10;
-patchesBehind = 0;
-trainIterations = 30000;
+lanesSide = 4;
+patchesAhead = 4*8;
+patchesBehind = 4*3;
+trainIterations = 10000;
 
 // the number of other autonomous vehicles controlled by your network
 otherAgents = 0; // max of 10
@@ -23,26 +23,36 @@ var layer_defs = [];
 });
 layer_defs.push({
     type: 'fc',
-    num_neurons: 10,
-    activation: 'relu'
+    num_neurons: num_actions*5,
+    activation: 'tanh'
 });
 layer_defs.push({
-    type: 'regression',
-    num_neurons: num_actions
+    type: 'fc',
+    num_neurons: num_actions*5,
+    activation: 'tanh'
+});
+layer_defs.push({
+    type: 'svm',
+    num_classes: num_actions*5,
+});
+layer_defs.push({
+    type: 'fc',
+    num_neurons: num_actions,
+    activation: 'tanh'
 });
 
 var tdtrainer_options = {
-    learning_rate: 0.001,
+    learning_rate: 0.01,
     momentum: 0.0,
     batch_size: 64,
-    l2_decay: 0.01
+    l2_decay: 0.05
 };
 
 var opt = {};
 opt.temporal_window = temporal_window;
-opt.experience_size = 3000;
-opt.start_learn_threshold = 500;
-opt.gamma = 0.5;
+opt.experience_size = 10000;
+opt.start_learn_threshold = 5000;
+opt.gamma = 0.9;
 opt.learning_steps_total = 10000;
 opt.learning_steps_burnin = 1000;
 opt.epsilon_min = 0.0;
@@ -53,13 +63,13 @@ opt.tdtrainer_options = tdtrainer_options;
 brain = new deepqlearn.Brain(num_inputs, num_actions, opt);
 
 learn = function (state, lastReward) {
-brain.backward(lastReward);
-var action = brain.forward(state);
+    brain.backward(lastReward);
+    var action = brain.forward(state);
 
-draw_net();
-draw_stats();
-
-return action;
+    draw_net();
+    draw_stats();
+    
+    return action;
 }
 
 //]]>
